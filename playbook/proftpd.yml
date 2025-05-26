@@ -1,0 +1,41 @@
+- name: "Install packages"
+  hosts: all
+  become_user: true
+  vars:
+    group_ftp: ftp
+    max_client: 10
+    proftpd_changed:
+    folder_status:
+    range_ip_allow: 192.168.70.0/24
+  tasks:
+    - apt:
+        name:
+          - proftpd
+          - fail2ban
+        state: latest
+    - group:
+        name: "{{ group_ftp }}"
+        state: present
+    - user:
+        name: ftp
+        shell: /bin/bash
+        groups: ftp
+        append: yes
+    - stat:
+        path: /etc/proftpd/conf.d/
+      register: folder_status
+    - file:
+        path: /etc/proftpd/conf.d/
+        state: directory
+      when: not folder_status.stat.exists
+    - template:
+        src: "template/proftp.conf.j2"
+        owner: root
+        group: root
+        mode: '0644'
+        dest: "/etc/proftpd/conf.d/{{ ansible_hostname }}.conf"
+      register: proftpd_changed
+    - service:
+        name: proftpd
+        state: reloaded
+      when: proftpd_changed.changed
