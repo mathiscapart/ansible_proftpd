@@ -1,0 +1,70 @@
+Include /etc/proftpd/modules.conf
+
+UseIPv6 off
+<IfModule mod_ident.c>
+  IdentLookups off
+</IfModule>
+
+ServerName "{{ ansible_hostname }}"
+ServerType standalone
+DeferWelcome off
+
+Port 2222
+
+DefaultServer on
+ShowSymlinks on
+
+TimeoutNoTransfer 600
+TimeoutStalled 600
+TimeoutIdle 1200
+
+DisplayLogin welcome.msg
+DisplayChdir .message true
+ListOptions "-l"
+
+DenyFilter \*.*/
+
+<IfModule mod_dynmasq.c>
+</IfModule>
+
+MaxInstances 30
+
+User proftpd
+Group nogroup
+
+Umask 022 022
+AllowOverwrite on
+
+TransferLog /var/log/proftpd/xferlog
+SystemLog /var/log/proftpd/proftpd.log
+
+<IfModule mod_quotatab.c>
+QuotaEngine off
+</IfModule>
+
+<IfModule mod_ratio.c>
+Ratios off
+</IfModule>
+
+<IfModule mod_delay.c>
+DelayEngine on
+</IfModule>
+
+<IfModule mod_ctrls.c>
+ControlsEngine off
+ControlsMaxClients 2
+ControlsLog /var/log/proftpd/controls.log
+ControlsInterval 5
+ControlsSocket /var/run/proftpd/proftpd.sock
+</IfModule>
+
+<IfModule mod_ctrls_admin.c>
+AdminControlsEngine off
+</IfModule>
+
+<Limit LOGIN>
+    Allow from {{ range_ip_allow }}
+    DenyAll
+</Limit>
+
+Include /etc/proftpd/conf.d/*.conf

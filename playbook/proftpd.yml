@@ -8,16 +8,21 @@
     folder_status:
     range_ip_allow: 192.168.70.0/24
   tasks:
+    - debug:
     - apt:
         name:
           - proftpd
           - fail2ban
         state: latest
+    - service:
+        name: proftpd
+        state: started
     - group:
         name: "{{ group_ftp }}"
         state: present
     - user:
-        name: ftp
+        name: user_ftp
+        password: '*'
         shell: /bin/bash
         groups: ftp
         append: yes
@@ -29,11 +34,11 @@
         state: directory
       when: not folder_status.stat.exists
     - template:
-        src: "template/proftp.conf.j2"
+        src: "proftpd.conf.j2"
         owner: root
         group: root
         mode: '0644'
-        dest: "/etc/proftpd/conf.d/{{ ansible_hostname }}.conf"
+        dest: "/etc/proftpd/proftpd.conf"
       register: proftpd_changed
     - service:
         name: proftpd
